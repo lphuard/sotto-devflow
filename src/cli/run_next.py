@@ -2,13 +2,13 @@
 
 import sys
 
-from src.integrations.mock_builder import MockBuilder
+from src.integrations.openhands_builder import OpenHandsBuilder
 from src.orchestrator.engine import TaskEngine
 
 
 def run_next_task() -> bool:
     """Run the next queued task from the task store."""
-    engine = TaskEngine(builder=MockBuilder())
+    engine = TaskEngine(builder=OpenHandsBuilder())
     return engine.process_next_task()
 
 

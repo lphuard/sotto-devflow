@@ -34,7 +34,28 @@
     "id": "task-005",
     "title": "Test queued task",
     "objective": "Test targeted execution of queued task",
-    "status": "queued",
+    "status": "openhands_report_ready",
     "branch": "main"
+  },
+  {
+    "id": "test-openhands",
+    "title": "Test OpenHands Builder",
+    "objective": "Test the OpenHands builder implementation",
+    "status": "openhands_report_ready",
+    "branch": "main"
+  },
+  {
+    "id": "test-openhands-fail",
+    "title": "Test OpenHands Builder Failure",
+    "objective": "Test the OpenHands builder failure handling",
+    "branch": "main",
+    "status": "failed"
+  },
+  {
+    "id": "test-run-next",
+    "title": "Test Run Next",
+    "objective": "Test the run_next command",
+    "branch": "main",
+    "status": "openhands_report_ready"
   }
 ]
