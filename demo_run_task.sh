@@ -16,19 +16,29 @@ echo "Exit code: $?"
 echo ""
 
 echo "3. Testing queued task execution (creating a new queued task first):"
-# Add a new queued task for demo
+# Ensure a runnable queued task for demo
 python -c "
 from src.state.store import TaskStore
 store = TaskStore()
-new_task = {
-    'id': 'demo-queued',
-    'title': 'Demo Queued Task',
-    'objective': 'Demonstrate targeted execution',
-    'status': 'queued',
-    'branch': 'main'
-}
-store.add_task(new_task)
-print('Added demo queued task')
+task_id = 'demo-queued'
+task = store.get_task(task_id)
+
+if task is None:
+    new_task = {
+        'id': task_id,
+        'title': 'Demo Queued Task',
+        'objective': 'Demonstrate targeted execution',
+        'status': 'queued',
+        'branch': 'main'
+    }
+    added = store.add_task(new_task)
+    print('Added demo queued task' if added else 'Failed to add demo queued task')
+else:
+    if task['status'] != 'queued':
+        updated = store.update_task(task_id, {'status': 'queued'})
+        print(f'Reset existing demo task to queued: {updated}')
+    else:
+        print('Demo queued task already exists in queued status')
 "
 
 echo "Running the queued task:"

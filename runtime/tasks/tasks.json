@@ -34,14 +34,7 @@
     "id": "task-005",
     "title": "Test queued task",
     "objective": "Test targeted execution of queued task",
-    "status": "openhands_report_ready",
-    "branch": "main"
-  },
-  {
-    "id": "demo-queued",
-    "title": "Demo Queued Task",
-    "objective": "Demonstrate targeted execution",
-    "status": "openhands_report_ready",
+    "status": "queued",
     "branch": "main"
   }
 ]
