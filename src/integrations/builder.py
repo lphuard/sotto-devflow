@@ -20,3 +20,5 @@ class BuilderAdapter(ABC):
             Dictionary containing the execution report
         """
         pass
+
+

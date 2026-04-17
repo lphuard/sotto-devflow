@@ -27,14 +27,21 @@ def run_task(task_id: str) -> bool:
 
     result = engine.execute_task(task_id, task)
     report = result["report"]
+    final_state = result["final_state"]
 
-    print("Task status updated to 'openhands_report_ready'")
+    print(f"Task status updated to '{final_state['status']}'")
     print("\n=== EXECUTION RESULT ===")
     print(f"Task ID: {task['id']}")
     print(f"Task Title: {task['title']}")
-    print("Final Status: openhands_report_ready")
+    print(f"Final Status: {final_state['status']}")
     print(f"Execution Time: {report.get('timestamp', 'N/A')}")
-    print(f"Result: {report.get('results', {}).get('output', 'Execution completed')}")
+    print(f"Summary: {report.get('summary', 'Execution completed')}")
+    print(f"Exit Code: {report.get('exit_code', 0)}")
+
+    if final_state['status'] == 'failed':
+        print("Task failed - check logs for details")
+        if report.get('stderr_excerpt'):
+            print(f"Error excerpt: {report['stderr_excerpt']}")
 
     return True
 
