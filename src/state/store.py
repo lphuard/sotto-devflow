@@ -1,7 +1,6 @@
 # store.py - State store for task and workflow state
 
 import json
-import os
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
@@ -47,7 +46,7 @@ class TaskStore:
                 return False
         
         # Check status is valid
-        valid_statuses = ["todo", "in_progress", "done", "failed"]
+        valid_statuses = ["queued", "executing", "openhands_report_ready", "todo", "in_progress", "done", "failed"]
         if task["status"] not in valid_statuses:
             return False
         
@@ -74,16 +73,17 @@ class TaskStore:
         self._save_raw_tasks(valid_tasks)
     
     def get_next_task(self) -> Optional[Dict[str, Any]]:
-        """Get the next queued task (first task with status 'todo').
+        """Get the next queued task (first task with status 'queued' sorted by ID for deterministic selection).
         
         Returns:
             Task dictionary or None if no tasks available
         """
         tasks = self.load_tasks()
-        for task in tasks:
-            if task["status"] == "todo":
-                return task
-        return None
+        # "todo" is kept in valid_statuses for backwards compatibility but is not picked up here;
+        # new tasks must use "queued" to enter the execution pipeline.
+        queued_tasks = [task for task in tasks if task["status"] == "queued"]
+        queued_tasks.sort(key=lambda x: x["id"])
+        return queued_tasks[0] if queued_tasks else None
     
     def get_task(self, task_id: str) -> Optional[Dict[str, Any]]:
         """Get a specific task by ID.
