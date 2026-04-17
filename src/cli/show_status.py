@@ -23,14 +23,12 @@ def show_status(task_id: str) -> bool:
         print(f"Error: Task with ID '{task_id}' not found")
         return False
     
-    # Print task details
     print(f"ID: {task['id']}")
     print(f"Title: {task['title']}")
     print(f"Objective: {task['objective']}")
     print(f"Status: {task['status']}")
     print(f"Branch: {task['branch']}")
-    
-    # Only print PR URL if it exists and is not empty
+
     if task.get('pr_url', ''):
         print(f"PR URL: {task['pr_url']}")
     
@@ -46,7 +44,6 @@ def main():
     task_id = sys.argv[1]
     success = show_status(task_id)
     
-    # Exit with appropriate status code
     return success
 
 

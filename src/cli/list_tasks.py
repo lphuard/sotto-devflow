@@ -1,34 +1,29 @@
 # list_tasks.py - CLI command to list all tasks from the task store
 
+import sys
 from src.state.store import TaskStore
 
 
 def list_tasks():
-    """List all tasks from the task store.
-    
-    Prints a deterministic summary of all tasks with id, title, and status.
-    If no tasks are found, prints "No tasks found" and exits cleanly.
-    """
+    """List all tasks from the task store."""
     store = TaskStore()
     tasks = store.load_tasks()
-    
+
     if not tasks:
         print("No tasks found")
         return True
-    
-    # Sort tasks by ID for deterministic output
+
     tasks.sort(key=lambda x: x["id"])
-    
-    # Print header
-    print("ID\t\t\tTITLE\t\t\t\t\t\t\t\tSTATUS")
+
+    print(f"{'ID':<20}{'TITLE':<50}STATUS")
     print("-" * 80)
-    
-    # Print each task
+
     for task in tasks:
-        print(f"{task['id']}\t\t{task['title']}\t\t{task['status']}")
-    
+        print(f"{task['id']:<20}{task['title']:<50}{task['status']}")
+
     return True
 
 
 if __name__ == "__main__":
-    list_tasks()
+    success = list_tasks()
+    sys.exit(0 if success else 1)
