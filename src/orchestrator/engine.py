@@ -1,9 +1,8 @@
 # engine.py - Task orchestration engine
 
-import json
-from pathlib import Path
 from datetime import datetime
 from src.state.store import TaskStore
+from src.utils.report import write_report
 
 
 class OrchestratorEngine:
@@ -12,27 +11,6 @@ class OrchestratorEngine:
     def __init__(self):
         """Initialize the orchestrator engine."""
         self.store = TaskStore()
-    
-    def _write_report(self, task, report_data):
-        """Write an optional JSON report for the task."""
-        reports_dir = Path("runtime/reports")
-        reports_dir.mkdir(parents=True, exist_ok=True)
-        
-        report_file = reports_dir / f"{task['id']}.json"
-        
-        # Create minimal report structure
-        report = {
-            "task_id": task['id'],
-            "title": task['title'],
-            "status": "openhands_report_ready",
-            "timestamp": datetime.now().isoformat(),
-            "data": report_data
-        }
-        
-        with open(report_file, 'w') as f:
-            json.dump(report, f, indent=2)
-        
-        return report_file
     
     def process_next_task(self) -> bool:
         """Process the next available task.
@@ -67,7 +45,7 @@ class OrchestratorEngine:
             
             try:
                 # Optionally write minimal JSON report
-                report_file = self._write_report(next_task, execution_result)
+                report_file = write_report(next_task, execution_result)
                 print(f"Report written to: {report_file}")
             except OSError as exc:
                 print(f"Failed to write report: {exc}")

@@ -79,9 +79,10 @@ class TaskStore:
             Task dictionary or None if no tasks available
         """
         tasks = self.load_tasks()
-        # Filter queued tasks and sort by ID for deterministic selection
+        # "todo" is kept in valid_statuses for backwards compatibility but is not picked up here;
+        # new tasks must use "queued" to enter the execution pipeline.
         queued_tasks = [task for task in tasks if task["status"] == "queued"]
-        queued_tasks.sort(key=lambda x: x["id"])  # Sort by ID for deterministic selection
+        queued_tasks.sort(key=lambda x: x["id"])
         return queued_tasks[0] if queued_tasks else None
     
     def get_task(self, task_id: str) -> Optional[Dict[str, Any]]:

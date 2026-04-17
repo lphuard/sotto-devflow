@@ -1,31 +1,8 @@
 # run_next.py - CLI entry point for running the next queued task
 
-import json
-from pathlib import Path
 from datetime import datetime
 from src.state.store import TaskStore
-
-
-def write_report(task, report_data):
-    """Write an optional JSON report for the task."""
-    reports_dir = Path("runtime/reports")
-    reports_dir.mkdir(parents=True, exist_ok=True)
-    
-    report_file = reports_dir / f"{task['id']}.json"
-    
-    # Create minimal report structure
-    report = {
-        "task_id": task['id'],
-        "title": task['title'],
-        "status": "openhands_report_ready",
-        "timestamp": datetime.now().isoformat(),
-        "data": report_data
-    }
-    
-    with open(report_file, 'w') as f:
-        json.dump(report, f, indent=2)
-    
-    return report_file
+from src.utils.report import write_report
 
 
 def run_next_task():
