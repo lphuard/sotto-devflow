@@ -1,7 +1,6 @@
 # run_next.py - CLI entry point for running the next queued task
 
 import json
-import os
 from pathlib import Path
 from datetime import datetime
 from src.state.store import TaskStore
@@ -56,7 +55,16 @@ def run_next_task():
             "timestamp": datetime.now().isoformat()
         }
         
-        # Update task status to openhands_report_ready
+        try:
+            # Optionally write minimal JSON report
+            report_file = write_report(next_task, execution_result)
+            print(f"Report written to: {report_file}")
+        except OSError as exc:
+            print(f"Failed to write report: {exc}")
+            store.update_task(next_task['id'], {'status': 'failed'})
+            return False
+
+        # Update task status to openhands_report_ready only after report write succeeds
         success = store.update_task(next_task['id'], {'status': 'openhands_report_ready'})
         if not success:
             print("Failed to update task status to 'openhands_report_ready'")
@@ -71,10 +79,6 @@ def run_next_task():
         print(f"Final Status: openhands_report_ready")
         print(f"Execution Time: {execution_result['timestamp']}")
         print(f"Result: {execution_result['message']}")
-        
-        # Optionally write minimal JSON report
-        report_file = write_report(next_task, execution_result)
-        print(f"Report written to: {report_file}")
         
         return True
     else:

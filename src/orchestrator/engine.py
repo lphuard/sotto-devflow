@@ -65,27 +65,32 @@ class OrchestratorEngine:
                 "timestamp": datetime.now().isoformat()
             }
             
-            # Update task status to openhands_report_ready
-            success = self.store.update_task(next_task['id'], {'status': 'openhands_report_ready'})
-            if success:
-                print("Task marked as openhands_report_ready")
-                
-                # Print deterministic result to stdout
-                print("\n=== EXECUTION RESULT ===")
-                print(f"Task ID: {next_task['id']}")
-                print(f"Task Title: {next_task['title']}")
-                print(f"Final Status: openhands_report_ready")
-                print(f"Execution Time: {execution_result['timestamp']}")
-                print(f"Result: {execution_result['message']}")
-                
+            try:
                 # Optionally write minimal JSON report
                 report_file = self._write_report(next_task, execution_result)
                 print(f"Report written to: {report_file}")
-                
-                return True
-            else:
+            except OSError as exc:
+                print(f"Failed to write report: {exc}")
+                self.store.update_task(next_task['id'], {'status': 'failed'})
+                return False
+
+            # Update task status to openhands_report_ready only after report write succeeds
+            success = self.store.update_task(next_task['id'], {'status': 'openhands_report_ready'})
+            if not success:
                 print("Failed to update task status to 'openhands_report_ready'")
                 return False
+
+            print("Task marked as openhands_report_ready")
+            
+            # Print deterministic result to stdout
+            print("\n=== EXECUTION RESULT ===")
+            print(f"Task ID: {next_task['id']}")
+            print(f"Task Title: {next_task['title']}")
+            print(f"Final Status: openhands_report_ready")
+            print(f"Execution Time: {execution_result['timestamp']}")
+            print(f"Result: {execution_result['message']}")
+            
+            return True
         else:
             print("No queued tasks")
             return False

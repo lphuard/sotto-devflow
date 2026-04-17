@@ -19,7 +19,7 @@
     "status": {
       "type": "string",
       "description": "Current status of the task",
-      "enum": ["todo", "in_progress", "done", "failed"]
+      "enum": ["queued", "executing", "openhands_report_ready", "todo", "in_progress", "done", "failed"]
     },
     "branch": {
       "type": "string",
