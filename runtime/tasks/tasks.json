@@ -1,0 +1,33 @@
+[
+  {
+    "id": "task-001",
+    "title": "Implement task store",
+    "objective": "Create a persistent JSON-backed task store for sotto-devflow",
+    "status": "in_progress",
+    "branch": "main",
+    "pr_url": ""
+  },
+  {
+    "id": "task-002",
+    "title": "Add CLI integration",
+    "objective": "Integrate the task store with the CLI run_next command",
+    "status": "in_progress",
+    "branch": "feature/cli-integration",
+    "pr_url": ""
+  },
+  {
+    "id": "task-003",
+    "title": "Test orchestrator",
+    "objective": "Test the orchestrator engine with the new task store",
+    "status": "done",
+    "branch": "feature/orchestrator-test",
+    "pr_url": "https://github.com/lphuard/sotto-devflow/pull/1"
+  },
+  {
+    "id": "task-004",
+    "title": "Test new task",
+    "objective": "Test adding a new task to the store",
+    "status": "todo",
+    "branch": "test-branch"
+  }
+]
