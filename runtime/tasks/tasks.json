@@ -27,7 +27,28 @@
     "id": "task-004",
     "title": "Test new task",
     "objective": "Test adding a new task to the store",
-    "status": "todo",
+    "status": "openhands_report_ready",
     "branch": "test-branch"
+  },
+  {
+    "id": "task-005",
+    "title": "Test orchestrator task",
+    "objective": "Test the orchestrator engine",
+    "status": "openhands_report_ready",
+    "branch": "orchestrator-test"
+  },
+  {
+    "id": "task-006",
+    "title": "Test deterministic selection A",
+    "objective": "Test deterministic task selection",
+    "status": "openhands_report_ready",
+    "branch": "test-a"
+  },
+  {
+    "id": "task-007",
+    "title": "Test deterministic selection B",
+    "objective": "Test deterministic task selection",
+    "status": "openhands_report_ready",
+    "branch": "test-b"
   }
 ]
