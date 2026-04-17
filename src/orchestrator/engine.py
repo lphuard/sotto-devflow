@@ -1,112 +1,118 @@
 # engine.py - Task orchestration engine
 
 import json
-import os
-from typing import Dict, Any, Optional
 from datetime import datetime
-from ..integrations.mock_builder import MockBuilder
-from ..integrations.builder import BuilderAdapter
+from pathlib import Path
+from typing import Any, Dict, Optional
+
+from src.integrations.builder import BuilderAdapter
+from src.integrations.mock_builder import MockBuilder
+from src.state.store import TaskStore
+
 
 class TaskEngine:
-    """Task orchestration engine that uses builder adapters."""
+    """Task orchestration engine that uses the persistent task store."""
 
-    def __init__(self, builder: BuilderAdapter = None):
-        """
-        Initialize the task engine.
-
-        Args:
-            builder: Builder adapter instance. If None, uses MockBuilder.
-        """
+    def __init__(
+        self,
+        builder: Optional[BuilderAdapter] = None,
+        store: Optional[TaskStore] = None,
+        reports_dir: str = "runtime/reports",
+    ):
+        """Initialize the task engine."""
         self.builder = builder or MockBuilder()
-        self._ensure_directories()
-
-    def _ensure_directories(self):
-        """Ensure required directories exist."""
-        reports_dir = "/workspace/sotto-devflow/runtime/reports"
-        os.makedirs(reports_dir, exist_ok=True)
+        self.store = store or TaskStore()
+        self.reports_dir = Path(reports_dir)
+        self.reports_dir.mkdir(parents=True, exist_ok=True)
 
     def mark_task_executing(self, task_id: str) -> Dict[str, Any]:
-        """
-        Mark a task as executing.
+        """Persist the task transition into the executing state."""
+        if not self.store.update_task(task_id, {"status": "executing"}):
+            raise ValueError(f"Failed to update task '{task_id}' to 'executing'")
 
-        Args:
-            task_id: The unique identifier for the task
-
-        Returns:
-            Dictionary containing the execution state
-        """
-        state = {
+        return {
             "task_id": task_id,
             "status": "executing",
             "timestamp": datetime.now().isoformat(),
-            "state": "task_execution_started"
+            "state": "task_execution_started",
         }
-        return state
 
     def persist_report(self, task_id: str, report: Dict[str, Any]) -> str:
-        """
-        Persist the execution report to file.
+        """Persist the raw builder report to runtime/reports/<task_id>.json."""
+        report_file = self.reports_dir / f"{task_id}.json"
 
-        Args:
-            task_id: The unique identifier for the task
-            report: The execution report dictionary
-
-        Returns:
-            Path to the saved report file
-        """
-        reports_dir = "/workspace/sotto-devflow/runtime/reports"
-        report_file = os.path.join(reports_dir, f"{task_id}.json")
-
-        with open(report_file, 'w') as f:
+        with open(report_file, "w") as f:
             json.dump(report, f, indent=2)
 
-        return report_file
+        return str(report_file)
 
-    def mark_report_ready(self, task_id: str) -> Dict[str, Any]:
-        """
-        Mark the final state as openhands_report_ready.
+    def mark_report_ready(self, task_id: str, report_file: str) -> Dict[str, Any]:
+        """Persist the final openhands_report_ready task state."""
+        if not self.store.update_task(task_id, {"status": "openhands_report_ready"}):
+            raise ValueError(f"Failed to update task '{task_id}' to 'openhands_report_ready'")
 
-        Args:
-            task_id: The unique identifier for the task
-
-        Returns:
-            Dictionary containing the final state
-        """
-        state = {
+        return {
             "task_id": task_id,
-            "status": "completed",
+            "status": "openhands_report_ready",
             "timestamp": datetime.now().isoformat(),
             "state": "openhands_report_ready",
-            "report_file": f"/workspace/sotto-devflow/runtime/reports/{task_id}.json"
+            "report_file": report_file,
         }
-        return state
 
     def execute_task(self, task_id: str, task_data: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Execute a task using the builder adapter.
-
-        Args:
-            task_id: The unique identifier for the task
-            task_data: Dictionary containing task data and parameters
-
-        Returns:
-            Dictionary containing the complete execution result
-        """
-        # Mark task as executing
+        """Execute a task through the configured builder adapter."""
         executing_state = self.mark_task_executing(task_id)
-
-        # Execute task using builder adapter
         report = self.builder.execute(task_id, task_data)
-
-        # Persist the report
         report_file = self.persist_report(task_id, report)
-
-        # Mark final state
-        final_state = self.mark_report_ready(task_id)
+        final_state = self.mark_report_ready(task_id, report_file)
 
         return {
             "executing_state": executing_state,
             "report": report,
             "report_file": report_file,
-            "final_state": final_state
+            "final_state": final_state,
         }
+
+    def process_next_task(self) -> bool:
+        """Process the next queued task from persistent storage."""
+        next_task = self.store.get_next_task()
+        if not next_task:
+            print("No queued tasks")
+            return False
+
+        print(f"Running next task: {next_task['title']} (ID: {next_task['id']})")
+        print(f"Objective: {next_task['objective']}")
+        print(f"Status: {next_task['status']}")
+        print(f"Branch: {next_task['branch']}")
+
+        try:
+            result = self.execute_task(next_task["id"], next_task)
+        except (OSError, ValueError) as exc:
+            print(f"Task execution failed: {exc}")
+            self.store.update_task(next_task["id"], {"status": "failed"})
+            return False
+
+        report = result["report"]
+        print("Task status updated to 'openhands_report_ready'")
+        print(f"Report written to: {result['report_file']}")
+        print("\n=== EXECUTION RESULT ===")
+        print(f"Task ID: {next_task['id']}")
+        print(f"Task Title: {next_task['title']}")
+        print("Final Status: openhands_report_ready")
+        print(f"Execution Time: {report.get('timestamp', 'N/A')}")
+        print(f"Result: {report.get('results', {}).get('output', 'Execution completed')}")
+        return True
+
+    def get_task_status(self, task_id: str) -> str:
+        """Get the current status of a task."""
+        task = self.store.get_task(task_id)
+        return task["status"] if task else "not_found"
+
+
+class OrchestratorEngine(TaskEngine):
+    """Backward-compatible alias for the previous engine name."""
+
+
+if __name__ == "__main__":
+    engine = OrchestratorEngine()
+    engine.process_next_task()

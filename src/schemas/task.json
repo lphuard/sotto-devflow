@@ -3,5 +3,33 @@
   "title": "Task",
   "description": "Schema for a sotto-devflow task",
   "type": "object",
-  "properties": {}
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the task"
+    },
+    "title": {
+      "type": "string",
+      "description": "Short title of the task"
+    },
+    "objective": {
+      "type": "string",
+      "description": "Detailed objective of the task"
+    },
+    "status": {
+      "type": "string",
+      "description": "Current status of the task",
+      "enum": ["queued", "executing", "openhands_report_ready", "todo", "in_progress", "done", "failed"]
+    },
+    "branch": {
+      "type": "string",
+      "description": "Git branch associated with the task"
+    },
+    "pr_url": {
+      "type": "string",
+      "description": "Pull request URL for the task",
+      "format": "uri"
+    }
+  },
+  "required": ["id", "title", "objective", "status", "branch"]
 }

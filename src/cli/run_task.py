@@ -1,46 +1,47 @@
+# run_task.py - CLI entry point for running a specific task by ID
 
-
-# run_task.py - CLI entry point for running a specific task
-
-import json
 import sys
-from ..orchestrator.engine import TaskEngine
-from ..integrations.mock_builder import MockBuilder
 
-def run_task(task_id: str):
-    """
-    Run a specific task by ID.
+from src.integrations.mock_builder import MockBuilder
+from src.orchestrator.engine import TaskEngine
 
-    Args:
-        task_id: The unique identifier for the task to run
-    """
-    # For demonstration purposes, we'll use mock task data
-    task_data = {
-        "task_id": task_id,
-        "description": f"Specific task execution for {task_id}",
-        "parameters": {
-            "task_specific_param": f"value_for_{task_id}",
-            "direct_execution": True
-        }
-    }
 
-    # Initialize engine with mock builder
+def run_task(task_id: str) -> bool:
+    """Run a specific queued task by ID."""
     engine = TaskEngine(builder=MockBuilder())
+    task = engine.store.get_task(task_id)
 
-    # Execute the task
-    result = engine.execute_task(task_id, task_data)
+    if task is None:
+        print(f"Error: Task with ID '{task_id}' not found")
+        return False
 
-    # Print the result
-    print(f"Task {task_id} execution completed:")
-    print(json.dumps(result, indent=2))
+    if task["status"] != "queued":
+        print(f"Error: Task '{task_id}' has status '{task['status']}' and cannot be run")
+        print("Only tasks with status 'queued' are runnable in v1")
+        return False
 
-    return result
+    print(f"Running task: {task['title']} (ID: {task['id']})")
+    print(f"Objective: {task['objective']}")
+    print(f"Status: {task['status']}")
+    print(f"Branch: {task['branch']}")
+
+    result = engine.execute_task(task_id, task)
+    report = result["report"]
+
+    print("Task status updated to 'openhands_report_ready'")
+    print("\n=== EXECUTION RESULT ===")
+    print(f"Task ID: {task['id']}")
+    print(f"Task Title: {task['title']}")
+    print("Final Status: openhands_report_ready")
+    print(f"Execution Time: {report.get('timestamp', 'N/A')}")
+    print(f"Result: {report.get('results', {}).get('output', 'Execution completed')}")
+
+    return True
+
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
+    if len(sys.argv) != 2:
         print("Usage: python -m src.cli.run_task <task_id>")
         sys.exit(1)
 
-    task_id = sys.argv[1]
-    run_task(task_id)
-
+    sys.exit(0 if run_task(sys.argv[1]) else 1)
