@@ -59,12 +59,30 @@ class TaskEngine:
             "report_file": report_file,
         }
 
+    def mark_task_failed(self, task_id: str, report_file: str) -> Dict[str, Any]:
+        """Persist the final failed task state."""
+        if not self.store.update_task(task_id, {"status": "failed"}):
+            raise ValueError(f"Failed to update task '{task_id}' to 'failed'")
+
+        return {
+            "task_id": task_id,
+            "status": "failed",
+            "timestamp": datetime.now().isoformat(),
+            "state": "failed",
+            "report_file": report_file,
+        }
+
     def execute_task(self, task_id: str, task_data: Dict[str, Any]) -> Dict[str, Any]:
         """Execute a task through the configured builder adapter."""
         executing_state = self.mark_task_executing(task_id)
         report = self.builder.execute(task_id, task_data)
         report_file = self.persist_report(task_id, report)
-        final_state = self.mark_report_ready(task_id, report_file)
+
+        # Determine final state based on builder report status
+        if report.get("status") == "success":
+            final_state = self.mark_report_ready(task_id, report_file)
+        else:
+            final_state = self.mark_task_failed(task_id, report_file)
 
         return {
             "executing_state": executing_state,
@@ -93,14 +111,15 @@ class TaskEngine:
             return False
 
         report = result["report"]
-        print("Task status updated to 'openhands_report_ready'")
+        final_state = result["final_state"]
+        print(f"Task status updated to '{final_state['status']}'")
         print(f"Report written to: {result['report_file']}")
         print("\n=== EXECUTION RESULT ===")
         print(f"Task ID: {next_task['id']}")
         print(f"Task Title: {next_task['title']}")
-        print("Final Status: openhands_report_ready")
+        print(f"Final Status: {final_state['status']}")
         print(f"Execution Time: {report.get('timestamp', 'N/A')}")
-        print(f"Result: {report.get('results', {}).get('output', 'Execution completed')}")
+        print(f"Result: {report.get('summary', 'Execution completed')}")
         return True
 
     def get_task_status(self, task_id: str) -> str:

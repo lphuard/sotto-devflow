@@ -2,13 +2,13 @@
 
 import sys
 
-from src.integrations.mock_builder import MockBuilder
+from src.integrations.openhands_builder import OpenHandsBuilder
 from src.orchestrator.engine import TaskEngine
 
 
 def run_task(task_id: str) -> bool:
     """Run a specific queued task by ID."""
-    engine = TaskEngine(builder=MockBuilder())
+    engine = TaskEngine(builder=OpenHandsBuilder())
     task = engine.store.get_task(task_id)
 
     if task is None:
