@@ -29,5 +29,12 @@
     "objective": "Test adding a new task to the store",
     "status": "todo",
     "branch": "test-branch"
+  },
+  {
+    "id": "task-005",
+    "title": "Test queued task",
+    "objective": "Test targeted execution of queued task",
+    "status": "queued",
+    "branch": "main"
   }
 ]
