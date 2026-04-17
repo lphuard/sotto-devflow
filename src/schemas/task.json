@@ -1,0 +1,7 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Task",
+  "description": "Schema for a sotto-devflow task",
+  "type": "object",
+  "properties": {}
+}
