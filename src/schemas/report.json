@@ -1,7 +1,67 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Report",
-  "description": "Schema for a sotto-devflow task report",
+  "description": "Schema for a normalized sotto-devflow build report",
   "type": "object",
-  "properties": {}
+  "properties": {
+    "task_id": {
+      "type": "string",
+      "description": "Unique identifier for the task"
+    },
+    "builder": {
+      "type": "string",
+      "description": "Builder used for execution (e.g., 'openhands', 'mock')",
+      "enum": ["openhands", "mock"]
+    },
+    "status": {
+      "type": "string",
+      "description": "Normalized execution status",
+      "enum": ["success", "failure", "partial_success"]
+    },
+    "summary": {
+      "type": "string",
+      "description": "Concise deterministic summary of execution result"
+    },
+    "exit_code": {
+      "type": "integer",
+      "description": "Exit code from execution"
+    },
+    "raw_status": {
+      "type": "string",
+      "description": "Raw status string based on exit code"
+    },
+    "stdout_excerpt": {
+      "type": ["string", "null"],
+      "description": "Short excerpt from stdout output"
+    },
+    "stderr_excerpt": {
+      "type": ["string", "null"],
+      "description": "Short excerpt from stderr output"
+    },
+    "tests_passed": {
+      "type": ["boolean", "null"],
+      "description": "Whether tests passed (if determinable)"
+    },
+    "files_touched": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of files touched during execution"
+    },
+    "recommendation": {
+      "type": "string",
+      "description": "Recommendation based on execution status"
+    },
+    "raw_log_path": {
+      "type": ["string", "null"],
+      "description": "Path to raw log file"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp when report was generated"
+    }
+  },
+  "required": ["task_id", "builder", "status", "summary", "exit_code", "timestamp"]
 }

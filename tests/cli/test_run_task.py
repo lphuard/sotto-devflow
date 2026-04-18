@@ -41,8 +41,13 @@ def test_queued_task_executes_and_prints_result(capsys):
     result = {
         "report": {
             "timestamp": "2026-04-17T00:00:00",
-            "results": {"output": "Mock execution completed successfully"},
-        }
+            "summary": "Mock execution completed successfully",
+            "status": "success",
+            "exit_code": 0,
+        },
+        "final_state": {"status": "openhands_report_ready"},
+        "report_file": "runtime/reports/task-001.json",
+        "executing_state": {"status": "executing"},
     }
 
     with _patch_engine(QUEUED_TASK):

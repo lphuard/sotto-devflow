@@ -78,8 +78,10 @@ class TaskEngine:
         report = self.builder.execute(task_id, task_data)
         report_file = self.persist_report(task_id, report)
 
-        # Determine final state based on builder report status
-        if report.get("status") == "success":
+        # Determine final state based on normalized report status.
+        # partial_success still produces a usable report, so treat it like
+        # success (openhands_report_ready) rather than a hard failure.
+        if report.get("status") in ("success", "partial_success"):
             final_state = self.mark_report_ready(task_id, report_file)
         else:
             final_state = self.mark_task_failed(task_id, report_file)
@@ -119,7 +121,14 @@ class TaskEngine:
         print(f"Task Title: {next_task['title']}")
         print(f"Final Status: {final_state['status']}")
         print(f"Execution Time: {report.get('timestamp', 'N/A')}")
-        print(f"Result: {report.get('summary', 'Execution completed')}")
+        print(f"Summary: {report.get('summary', 'Execution completed')}")
+        print(f"Exit Code: {report.get('exit_code', 0)}")
+
+        if final_state["status"] == "failed":
+            print("Task failed - check logs for details")
+            if report.get("stderr_excerpt"):
+                print(f"Error excerpt: {report['stderr_excerpt']}")
+
         return True
 
     def get_task_status(self, task_id: str) -> str:
