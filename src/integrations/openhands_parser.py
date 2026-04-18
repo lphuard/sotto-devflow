@@ -133,7 +133,7 @@ class OpenHandsParser:
     def _extract_tests_passed(self, stdout: str, stderr: str) -> Optional[bool]:
         """Extract whether tests passed from output (conservative approach)."""
         # Look for clear test success indicators
-        success_indicators = ['all tests passed', 'tests: passed', 'test success', 'ok']
+        success_indicators = ['all tests passed', 'tests: passed', 'test success']
         failure_indicators = ['tests failed', 'test failure', 'failed tests']
 
         # Check stdout first
@@ -157,12 +157,12 @@ class OpenHandsParser:
         """Extract list of files touched from output (conservative approach)."""
         files_touched = []
 
-        # Look for common file patterns in output
+        # Only patterns that require an explicit path context (modified/created/etc.)
+        # The broad bare-extension pattern is omitted to avoid matching traceback filenames.
         patterns = [
             r'(?:modified|created|updated|touched|changed)\s+([^\s]+)',
             r'file\s+([^\s]+)\s+(?:modified|created|updated|touched|changed)',
             r'([^\s]+\.(py|js|ts|json|md|txt|html|css))\s+(?:modified|created|updated|touched|changed)',
-            r'([^\s]+\.(py|js|ts|json|md|txt|html|css))'
         ]
 
         combined_text = f"{stdout}\n{stderr}"
@@ -171,18 +171,37 @@ class OpenHandsParser:
             matches = re.findall(pattern, combined_text)
             for match in matches:
                 if isinstance(match, tuple):
-                    # Handle patterns with groups
                     for group in match:
                         if group and group not in files_touched:
                             files_touched.append(group)
                 elif match and match not in files_touched:
                     files_touched.append(match)
 
-        # Filter out obvious non-files and duplicates
-        files_touched = list(set(files_touched))
-        files_touched = [f for f in files_touched if '/' in f or '.' in f]  # Simple heuristic
+        # Post-filter: only keep tokens that look like real file paths.
+        # Must start with / or ./ or ../ (absolute/explicit-relative), or contain
+        # a directory separator, AND must have a file extension.
+        # Tokens with spaces, quotes, or traceback punctuation are rejected.
+        validated = []
+        for token in set(files_touched):
+            if not token:
+                continue
+            # Reject tokens containing whitespace or quote characters
+            if any(c in token for c in (' ', '"', "'")):
+                continue
+            # Reject tokens that are clearly traceback noise (e.g. end with "," or ":")
+            if token.endswith((',', ':', ')')):
+                continue
+            # Require an explicit path prefix or a directory separator
+            has_prefix = token.startswith('/') or token.startswith('./') or token.startswith('../')
+            has_sep = '/' in token
+            # Require a file extension (basename must contain a dot that isn't the first char)
+            basename = token.rsplit('/', 1)[-1] if '/' in token else token
+            parts = basename.split('.')
+            has_ext = len(parts) > 1 and parts[0] != '' and len(parts[-1]) <= 10
+            if (has_prefix or has_sep) and has_ext:
+                validated.append(token)
 
-        return files_touched
+        return validated
 
     def _generate_recommendation(self, status: str) -> str:
         """Generate recommendation based on execution status."""
